@@ -17,7 +17,7 @@ Entre otras que fueron indispensables a la hora de las consultas.
 
 ![Las estrellas indican las tablas más consultadas](TABLA_SQL_SAKILA.png)
 
-Se tuvo en cuenta en la estructura del código:
+👉 Se tuvo en cuenta en la estructura del código:
 - Queries básicas y abanzadas: `SELECT`
 - Funciones: `GROUP BY`, `WHERE` y `HAVING`.
 - Uso de `JOINS`
