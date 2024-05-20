@@ -184,7 +184,7 @@ nombre del actor junto con la cantidad de películas en las que han actuado.*/
 Utiliza una subconsulta para encontrar los rental_ids con una duración superior a 5 días 
 y luego selecciona las películas correspondientes.*/
 
--- Creo que se puede valorar, a no ser que la variable no dga eso
+-- Creo que se puede valorar, a no ser que la variable no diga eso
 	SELECT film_id, title AS 'Name_Movie', rental_duration AS 'Rental_days'
 	FROM film
 	WHERE rental_duration IN (
@@ -220,12 +220,12 @@ SELECT actor.first_name,
 		actor.last_name
 FROM actor
 WHERE actor.actor_id NOT IN (
-		SELECT film_actor.actor_id
-		FROM film_actor
-			INNER JOIN film ON film_actor.film_id = film.film_id
-			INNER JOIN film_category ON film.film_id = film_category.film_id
-			INNER JOIN category ON film_category.category_id = category.category_id
-		WHERE category.name = 'Horror');
+						SELECT film_actor.actor_id
+						FROM film_actor
+							INNER JOIN film ON film_actor.film_id = film.film_id
+							INNER JOIN film_category ON film.film_id = film_category.film_id
+							INNER JOIN category ON film_category.category_id = category.category_id
+						WHERE category.name = 'Horror');
 
 
 /* BONUS */
@@ -245,17 +245,16 @@ duración mayor a 180 minutos en la tabla film.*/
 La consulta debe mostrar el nombre y apellido de los actores y el número de películas 
 en las que han actuado juntos.*/
 
-SELECT a1.first_name AS actor1_first_name, 
-       a1.last_name AS actor1_last_name,
-       a2.first_name AS actor2_first_name, 
-       a2.last_name AS actor2_last_name,
-       COUNT(*) AS number_of_movies_together
+SELECT a1.first_name AS 'Actor1_first_name', 
+       a1.last_name AS 'Actor1_last_name',
+       a2.first_name AS 'Actor2_first_name', 
+       a2.last_name AS 'Actor2_last_name',
+       COUNT(*) AS 'Movies_together'
 FROM film_actor fa1
 	INNER JOIN film_actor fa2 ON fa1.film_id = fa2.film_id AND fa1.actor_id < fa2.actor_id
 	INNER JOIN actor a1 ON fa1.actor_id = a1.actor_id
 	INNER JOIN actor a2 ON fa2.actor_id = a2.actor_id
-GROUP BY a1.first_name, 
-		a1.last_name, 
+GROUP BY a1.first_name, a1.last_name, 
 		a2.first_name, a2.last_name
 HAVING COUNT(*) > 0
-ORDER BY number_of_movies_together DESC;
+ORDER BY Movies_together DESC;
