@@ -15,7 +15,7 @@ películas que contengan la palabra "amazing" en su descripción.*/
 
 	SELECT title AS 'Name_Movies', description
 	FROM film
-	WHERE description REGEXP "amazing";
+	WHERE description LIKE '%amazing%';
 
 /*4. Encuentra el título de todas las películas que tengan una 
 duración mayor a 120 minutos.*/
@@ -63,7 +63,7 @@ de la tabla film y muestra la clasificación junto con el recuento.*/
 	SELECT customer.customer_id, 
 			customer.first_name, 
 			customer.last_name, 
-			COUNT(rental.rental_id) AS 'Rental_Number'
+			COUNT(rental.rental_id) AS 'Rental_Movies'
     FROM customer
     LEFT JOIN rental
 		ON customer.customer_id = rental.customer_id
@@ -74,14 +74,10 @@ de la tabla film y muestra la clasificación junto con el recuento.*/
 /* 11. Encuentra la cantidad total de películas alquiladas por categoría 
 y muestra el nombre de la categoría junto con el recuento de alquileres.*/
 
--- Como desarrollarlo:
--- cantidad peliculas alquiladas con variable:rental_id
--- total categoria : category_id
--- nombre categoria : name
--- conectar las tablas por el id en común
+-- Como desarrollarlo:conectar las tablas por el id en común
 
 	SELECT category.category_id,
-			category.name,
+			category.name AS 'Category_Name',
 			COUNT(rental.rental_id) AS 'Rental_Number'
     FROM category
 		INNER JOIN film_category ON category.category_id = film_category.category_id
@@ -93,16 +89,16 @@ y muestra el nombre de la categoría junto con el recuento de alquileres.*/
 /* 12. Encuentra el promedio de duración de las películas para cada clasificación 
 de la tabla film y muestra la clasificación junto con el promedio de duración.*/
 
-	SELECT rating, AVG(rental_duration) AS 'Average_Length_Film'
+	SELECT rating, AVG(length) AS 'Average_Length_Film'
     FROM film
     GROUP BY rating;
 
 /* 13. Encuentra el nombre y apellido de los actores que aparecen en la película 
 con title "Indian Love".*/
 
-SELECT film.title,
-		actor.first_name, 
-		actor.last_name
+SELECT film.title AS 'Name_Movie',
+		actor.first_name AS 'First_name_actor', 
+		actor.last_name AS 'Last_name_actor'
 FROM actor
 	INNER JOIN film_actor ON actor.actor_id = film_actor.actor_id
 	INNER JOIN film ON film_actor.film_id = film.film_id
@@ -113,13 +109,14 @@ WHERE film.title = 'Indian Love';
 
 	SELECT title AS 'Name_Movies', description
 	FROM film
-	WHERE description REGEXP "dog" OR "cat";
+	WHERE description LIKE '%dog%' OR description LIKE '%cat%';
 
 /* 15. Hay algún actor o actriz que no aparezca en ninguna película en la tabla film_actor.*/
 	
     SELECT actor.actor_id, actor.first_name, actor.last_name
     FROM actor
-	LEFT JOIN film_actor ON actor.actor_id = film_actor.actor_id;
+	LEFT JOIN film_actor ON actor.actor_id = film_actor.actor_id
+    WHERE film_id IS NULL;
     
 /* 16. Encuentra el título de todas las películas que fueron lanzadas entre el año 2005 y 2010.*/
 	
@@ -150,11 +147,11 @@ WHERE film.title = 'Indian Love';
 /* 19. Encuentra el título de todas las películas que son "R" y tienen una 
 duración mayor a 2 horas en la tabla film.*/
 
-	SELECT film.title AS 'Name_Movie', 
-			film.length AS 'Duration', 
-			film.rating
+	SELECT title AS 'Name_Movie', 
+			length AS 'Duration', 
+			rating
     FROM film
-    WHERE rating = 'R' AND film.length > 120;
+    WHERE rating = 'R' AND length > 120;
 
 /* 20. Encuentra las categorías de películas que tienen un promedio de duración 
 superior a 120 minutos y muestra el nombre de la categoría junto con el promedio de duración.*/
