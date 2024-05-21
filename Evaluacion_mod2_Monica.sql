@@ -88,15 +88,14 @@ y muestra el nombre de la categoría junto con el recuento de alquileres.*/
 
 -- conectar las tablas por el id en común desde film hasta rental
 
-	SELECT category.category_id,
-			category.name AS 'Category_Name',
+	SELECT category.name AS 'Category_Name',
 			COUNT(rental.rental_id) AS 'Rental_Number'
     FROM category
 		INNER JOIN film_category ON category.category_id = film_category.category_id
         INNER JOIN film ON film_category.film_id = film.film_id
         INNER JOIN inventory ON inventory.film_id = film.film_id
 		INNER JOIN rental ON rental.inventory_id = inventory.inventory_id
-	GROUP BY category.category_id, category.name;
+	GROUP BY category.name;
 
 /* 12. Encuentra el promedio de duración de las películas para cada clasificación 
 de la tabla film y muestra la clasificación junto con el promedio de duración.*/
@@ -130,7 +129,7 @@ WHERE film.title = 'Indian Love';
 			actor.last_name
     FROM actor
 	LEFT JOIN film_actor ON actor.actor_id = film_actor.actor_id
-    WHERE film_id IS NULL;
+    WHERE film_actor.actor_id IS NULL;
     
 /* 16. Encuentra el título de todas las películas que fueron lanzadas entre el año 2005 y 2010.*/
 	
@@ -226,10 +225,9 @@ SELECT actor.first_name,
 		actor.last_name
 FROM actor
 WHERE actor.actor_id NOT IN (
-			SELECT film_actor.actor_id
+			SELECT DISTINCT film_actor.actor_id
 			FROM film_actor
-				INNER JOIN film ON film_actor.film_id = film.film_id
-				INNER JOIN film_category ON film.film_id = film_category.film_id
+				INNER JOIN film_category ON film_actor.film_id = film_category.film_id
 				INNER JOIN category ON film_category.category_id = category.category_id
 			WHERE category.name = 'Horror'
 							);
