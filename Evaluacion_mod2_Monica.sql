@@ -65,16 +65,28 @@ de la tabla film y muestra la clasificación junto con el recuento.*/
 			customer.last_name, 
 			COUNT(rental.rental_id) AS 'Rental_Movies'
     FROM customer
-    LEFT JOIN rental
+    INNER JOIN rental
 		ON customer.customer_id = rental.customer_id
-	GROUP BY customer.customer_id,
-			customer.first_name, 
-			customer.last_name;
+	GROUP BY customer.customer_id;
+            
+	-- Opción CTE
+    WITH Customer_Rental_Movies AS (
+			SELECT customer.customer_id, 
+					customer.first_name, 
+					customer.last_name, 
+					COUNT(rental.rental_id) AS 'Rental_Movies'
+			FROM customer
+			INNER JOIN rental ON customer.customer_id = rental.customer_id
+			GROUP BY customer.customer_id
+								)
+	SELECT *
+    FROM Customer_Rental_Movies;
+    
     
 /* 11. Encuentra la cantidad total de películas alquiladas por categoría 
 y muestra el nombre de la categoría junto con el recuento de alquileres.*/
 
--- Como desarrollarlo:conectar las tablas por el id en común
+-- conectar las tablas por el id en común desde film hasta rental
 
 	SELECT category.category_id,
 			category.name AS 'Category_Name',
@@ -113,7 +125,9 @@ WHERE film.title = 'Indian Love';
 
 /* 15. Hay algún actor o actriz que no aparezca en ninguna película en la tabla film_actor.*/
 	
-    SELECT actor.actor_id, actor.first_name, actor.last_name
+    SELECT actor.actor_id, 
+			actor.first_name, 
+			actor.last_name
     FROM actor
 	LEFT JOIN film_actor ON actor.actor_id = film_actor.actor_id
     WHERE film_id IS NULL;
@@ -126,7 +140,8 @@ WHERE film.title = 'Indian Love';
 
 /* 17. Encuentra el título de todas las películas que son de la misma categoría que "Family".*/
 
-	SELECT film.title AS 'Name_Movie', category.name AS 'Renge_Movies'
+	SELECT film.title AS 'Name_Movie', 
+			category.name AS 'Renge_Movies'
 	FROM film
 		INNER JOIN film_category ON film.film_id = film_category.film_id
 		INNER JOIN category ON film_category.category_id = category.category_id
@@ -162,8 +177,9 @@ superior a 120 minutos y muestra el nombre de la categoría junto con el promedi
 		INNER JOIN film_category ON film.film_id = film_category.film_id
 		INNER JOIN category ON film_category.category_id = category.category_id
 	GROUP BY category.name
-	HAVING AVG(film.length) > 120;
+	HAVING Average_Length_Film > 120;
 	
+    
 /* 21. Encuentra los actores que han actuado en al menos 5 películas y muestra el 
 nombre del actor junto con la cantidad de películas en las que han actuado.*/
 
@@ -185,28 +201,21 @@ y luego selecciona las películas correspondientes.*/
 	SELECT film_id, title AS 'Name_Movie', rental_duration AS 'Rental_days'
 	FROM film
 	WHERE rental_duration IN (
-		SELECT rental_duration
-		FROM film
-		WHERE rental_duration > 5);
+							SELECT rental_duration
+							FROM film
+							WHERE rental_duration > 5
+                            );
         
--- Usando el rental_id
+-- uniendo las tablas para llegar al rental, sin embargo las 1000 no son correctas
 	SELECT film.title AS 'Name_Movie'
     FROM film
-    INNER JOIN inventory ON film.film_id = inventory.film_id
-    WHERE inventory.inventory_id IN (
-			SELECT rental.inventory_id
-			FROM rental
-			WHERE DATEDIFF(rental.return_date, rental.rental_date) > 5
-			);
-            
--- Algo raro, porque da 1000 y hay pelis de menos días REVISAR
-    SELECT film.title AS 'Name_Movie'
-    FROM film
-    WHERE film_id IN (
-			SELECT DISTINCT film_id
-			FROM rental
-			WHERE DATEDIFF(rental.return_date, rental.rental_date) > 5
-			);
+		INNER JOIN inventory ON film.film_id = inventory.film_id
+	WHERE inventory.inventory_id IN (
+									SELECT rental.inventory_id
+									FROM rental
+									WHERE DATEDIFF(return_date, rental_date) > 5
+                                    GROUP BY title
+									);
 
 /* 23. Encuentra el nombre y apellido de los actores que no han actuado en 
 ninguna película de la categoría "Horror". Utiliza una subconsulta para encontrar 
@@ -217,12 +226,13 @@ SELECT actor.first_name,
 		actor.last_name
 FROM actor
 WHERE actor.actor_id NOT IN (
-						SELECT film_actor.actor_id
-						FROM film_actor
-							INNER JOIN film ON film_actor.film_id = film.film_id
-							INNER JOIN film_category ON film.film_id = film_category.film_id
-							INNER JOIN category ON film_category.category_id = category.category_id
-						WHERE category.name = 'Horror');
+			SELECT film_actor.actor_id
+			FROM film_actor
+				INNER JOIN film ON film_actor.film_id = film.film_id
+				INNER JOIN film_category ON film.film_id = film_category.film_id
+				INNER JOIN category ON film_category.category_id = category.category_id
+			WHERE category.name = 'Horror'
+							);
 
 
 /* BONUS */
@@ -230,28 +240,34 @@ WHERE actor.actor_id NOT IN (
 /* 24. BONUS: Encuentra el título de las películas que son comedias y tienen una 
 duración mayor a 180 minutos en la tabla film.*/
 
+	WITH Comedy_Movies_180 AS (
+			SELECT film.title, category.name, film.length
+			FROM film
+				INNER JOIN film_category ON film.film_id = film_category.film_id
+				INNER JOIN category ON film_category.category_id = category.category_id
+			WHERE length > 180 AND category.name = 'Comedy'
+							)
+							
 	SELECT title AS 'Name_Movie', 
-			category.name AS 'Renge_Movies', 
-			film.length AS 'Movie_length'
-	FROM film
-		INNER JOIN film_category ON film.film_id = film_category.film_id
-		INNER JOIN category ON film_category.category_id = category.category_id
-	WHERE length > 180 AND category.name = 'Comedy';
-        
+			name AS 'Renge_Movies', 
+			length AS 'Movie_length'
+	FROM Comedy_Movies_180;
+    
 /* 25. BONUS: Encuentra todos los actores que han actuado juntos en al menos una película. 
 La consulta debe mostrar el nombre y apellido de los actores y el número de películas 
 en las que han actuado juntos.*/
 
-SELECT a1.first_name AS 'Actor1_first_name', 
-       a1.last_name AS 'Actor1_last_name',
-       a2.first_name AS 'Actor2_first_name', 
-       a2.last_name AS 'Actor2_last_name',
-       COUNT(*) AS 'Movies_together'
-FROM film_actor fa1
-	INNER JOIN film_actor fa2 ON fa1.film_id = fa2.film_id AND fa1.actor_id < fa2.actor_id
-	INNER JOIN actor a1 ON fa1.actor_id = a1.actor_id
-	INNER JOIN actor a2 ON fa2.actor_id = a2.actor_id
-GROUP BY a1.first_name, a1.last_name, 
-		a2.first_name, a2.last_name
-HAVING COUNT(*) > 0
-ORDER BY Movies_together DESC;
+-- No fue facil, le dije al chagpt qu me ayudara
+	SELECT a1.first_name AS 'Actor1_first_name', a1.last_name AS 'Actor1_last_name',
+		   a2.first_name AS 'Actor2_first_name', a2.last_name AS 'Actor2_last_name',
+		   COUNT(*) AS 'Movies_together'
+	FROM film_actor fa1
+		INNER JOIN film_actor fa2 ON fa1.film_id = fa2.film_id AND fa1.actor_id < fa2.actor_id
+		INNER JOIN actor a1 ON fa1.actor_id = a1.actor_id
+		INNER JOIN actor a2 ON fa2.actor_id = a2.actor_id
+	GROUP BY a1.first_name, a1.last_name, 
+			a2.first_name, a2.last_name
+	HAVING COUNT(*) > 0
+	ORDER BY a1.first_name, a1.last_name, 
+			a2.first_name, a2.last_name;
+	
