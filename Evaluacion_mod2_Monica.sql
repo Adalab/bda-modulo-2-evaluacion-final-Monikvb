@@ -198,24 +198,24 @@ Utiliza una subconsulta para encontrar los rental_ids con una duración superior
 y luego selecciona las películas correspondientes.*/
 
 -- Creo que se puede valorar, a no ser que la variable no diga eso
-	SELECT film_id, title AS 'Name_Movie', rental_duration AS 'Rental_days'
+	SELECT film.title AS 'Name_Movie', 
+			rental_duration AS 'Rental_days'
 	FROM film
-	WHERE rental_duration IN (
-							SELECT rental_duration
-							FROM film
-							WHERE rental_duration > 5
-                            );
-        
--- uniendo las tablas para llegar al rental, sin embargo las 1000 no son correctas
-	SELECT film.title AS 'Name_Movie'
-    FROM film
-		INNER JOIN inventory ON film.film_id = inventory.film_id
+		JOIN inventory ON film.film_id = inventory.film_id
 	WHERE inventory.inventory_id IN (
-									SELECT rental.inventory_id
-									FROM rental
-									WHERE DATEDIFF(return_date, rental_date) > 5
-                                    GROUP BY title
+							SELECT rental.inventory_id
+							FROM rental
+							WHERE DATEDIFF(rental.return_date, rental.rental_date) > 5
 									);
+                                    
+-- Normal, sin subcon
+	SELECT DISTINCT title AS 'Name_Movie',
+					DATEDIFF(rental.return_date, rental.rental_date) AS 'Days_Rented'
+	FROM film
+		JOIN inventory ON film.film_id = inventory.film_id
+		JOIN rental ON inventory.inventory_id = rental.inventory_id
+	WHERE DATEDIFF(rental.return_date, rental.rental_date) > 5;
+							
 
 /* 23. Encuentra el nombre y apellido de los actores que no han actuado en 
 ninguna película de la categoría "Horror". Utiliza una subconsulta para encontrar 
@@ -257,17 +257,17 @@ duración mayor a 180 minutos en la tabla film.*/
 La consulta debe mostrar el nombre y apellido de los actores y el número de películas 
 en las que han actuado juntos.*/
 
--- No fue facil, le dije al chagpt qu me ayudara
-	SELECT a1.first_name AS 'Actor1_first_name', a1.last_name AS 'Actor1_last_name',
+-- No fue facil, le dije al chagpt que me ayudara, pero cambian los datos segun que!
+	
+    SELECT a1.first_name AS 'Actor1_first_name', a1.last_name AS 'Actor1_last_name',
 		   a2.first_name AS 'Actor2_first_name', a2.last_name AS 'Actor2_last_name',
 		   COUNT(*) AS 'Movies_together'
 	FROM film_actor fa1
-		INNER JOIN film_actor fa2 ON fa1.film_id = fa2.film_id AND fa1.actor_id < fa2.actor_id
-		INNER JOIN actor a1 ON fa1.actor_id = a1.actor_id
-		INNER JOIN actor a2 ON fa2.actor_id = a2.actor_id
+		JOIN film_actor fa2 ON fa1.film_id = fa2.film_id AND fa1.actor_id < fa2.actor_id
+		JOIN actor a1 ON fa1.actor_id = a1.actor_id
+		JOIN actor a2 ON fa2.actor_id = a2.actor_id
 	GROUP BY a1.first_name, a1.last_name, 
 			a2.first_name, a2.last_name
 	HAVING COUNT(*) > 0
-	ORDER BY a1.first_name, a1.last_name, 
-			a2.first_name, a2.last_name;
-	
+	ORDER BY Movies_together DESC;
+            
